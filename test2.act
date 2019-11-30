@@ -23,7 +23,7 @@ actor Z(6){
     }
     actorvars {
         string a;
-        int a;
+        int b[0];
     }
     msghandler initial(int r, boolean o) {
         int o;
@@ -44,6 +44,7 @@ actor B(6)
     actorvars {
         int a;
         string a;
+        int a[0];
     }
 }
 

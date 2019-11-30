@@ -10,6 +10,7 @@ import main.ast.node.expression.values.BooleanValue;
 import main.ast.node.expression.values.IntValue;
 import main.ast.node.expression.values.StringValue;
 import main.ast.node.statement.*;
+import main.ast.type.arrayType.ArrayType;
 import main.symbolTable.SymbolTable;
 import main.symbolTable.SymbolTableActorItem;
 import main.symbolTable.SymbolTableHandlerItem;
@@ -97,7 +98,7 @@ public class VisitorDataCollect implements Visitor {
             if(msgNames.contains(msg.getName().getName()))
             {
                 hasError = true;
-                System.out.println("Line:"+msg.getLine()+"Redefinition of msghandler : " + msg.getName().getName());
+                System.out.println("Line:"+msg.getLine()+":Redefinition of msghandler : " + msg.getName().getName());
             }
             else
                 msgNames.add(msg.getName().getName());
@@ -120,7 +121,14 @@ public class VisitorDataCollect implements Visitor {
 
     @Override
     public void visit(VarDeclaration varDeclaration) {
-//        System.out.println(varDeclaration.toString());
+        if(varDeclaration.getType().getClass() == ArrayType.class){
+            System.out.println("Array = " + varDeclaration.getIdentifier().getName());
+            ArrayType array = (ArrayType) varDeclaration.getType();
+            if(array.getSize() == 0){
+                hasError = true;
+                System.out.println("Line:" + varDeclaration.getLine() +":Array size must be positive");
+            }
+        }
         varDeclaration.getType().accept(this);
         varDeclaration.getIdentifier().accept(this);
     }
@@ -176,7 +184,6 @@ public class VisitorDataCollect implements Visitor {
 
     @Override
     public void visit(ArrayCall arrayCall) {
-//        System.out.println(arrayCall.toString());
         arrayCall.getArrayInstance().accept(this);
         arrayCall.getIndex().accept(this);
     }
