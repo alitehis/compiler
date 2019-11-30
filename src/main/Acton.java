@@ -1,6 +1,7 @@
 package main;
 
 import main.ast.node.Program;
+import main.visitor.VisitorDataCollect;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.*;
 import main.parsers.actonLexer; // import from the package your parser & lexer is generated in
@@ -20,6 +21,10 @@ public class Acton {
         Program program = parser.program().p; /* assuming that the name of the Program ast node
                                                  that the program rule returns is p */
         VisitorImpl visitor = new VisitorImpl();
-        program.accept(visitor);
+        VisitorDataCollect visitorCollect = new VisitorDataCollect();
+
+        program.accept(visitorCollect);
+//        if(!VisitorDataCollect.hasError)
+//            program.accept(visitor);
     }
 }

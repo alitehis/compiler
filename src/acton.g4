@@ -42,7 +42,9 @@ actorDeclaration returns[ActorDeclaration ret]:
 	} RPAREN LBRACE (
 		KNOWNACTORS LBRACE (f=identifier g=identifier SEMICOLON
 		{
-		    $ret.addKnownActor(new VarDeclaration($g.ret, new ActorType($f.ret)));
+            VarDeclaration knownActor = new VarDeclaration($g.ret, new ActorType($f.ret));
+            knownActor.setLine($f.ret.getLine());
+		    $ret.addKnownActor(knownActor);
 		})* RBRACE
 	) (ACTORVARS LBRACE h=varDeclarations RBRACE)
 	{

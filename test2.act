@@ -1,0 +1,53 @@
+actor A(5){
+    knownactors {
+        D i;
+    }
+    actorvars {
+
+    }
+    msghandler initial(int r, boolean o) {
+        string o;
+    }
+    msghandler foo() {
+
+    }
+    msghandler foo() {
+
+    }
+}
+
+actor Z(6){
+    knownactors {
+        C i;
+        D i;
+    }
+    actorvars {
+        string a;
+        int a;
+    }
+    msghandler initial(int r, boolean o) {
+        int o;
+    }
+    msghandler bar() {
+
+    }
+    msghandler bar() {
+
+    }
+}
+
+actor B(6)
+{
+    knownactors{
+        A i;
+    }
+    actorvars {
+        int a;
+        string a;
+    }
+}
+
+main {
+    A a(D):(9, true);
+    B b(A):();
+}

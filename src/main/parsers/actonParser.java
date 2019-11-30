@@ -335,7 +335,9 @@ public class actonParser extends Parser {
 				setState(101);
 				match(SEMICOLON);
 
-						    _localctx.ret.addKnownActor(new VarDeclaration(((ActorDeclarationContext)_localctx).g.ret, new ActorType(((ActorDeclarationContext)_localctx).f.ret)));
+				            VarDeclaration knownActor = new VarDeclaration(((ActorDeclarationContext)_localctx).g.ret, new ActorType(((ActorDeclarationContext)_localctx).f.ret));
+				            knownActor.setLine(((ActorDeclarationContext)_localctx).f.ret.getLine());
+						    _localctx.ret.addKnownActor(knownActor);
 						
 				}
 				}
