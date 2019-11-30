@@ -27,9 +27,10 @@ program
 	};
 
 actorDeclaration returns[ActorDeclaration ret]:
-	ACTOR x=identifier
+	t = ACTOR x=identifier
 	{
 	    $ret = new ActorDeclaration($x.ret);
+	    $ret.setLine($t.getLine());
 	}
 	(EXTENDS y=identifier
 	{
@@ -59,15 +60,17 @@ actorDeclaration returns[ActorDeclaration ret]:
 
 mainDeclaration returns[Main ret]:{
     $ret = new Main();
-} MAIN LBRACE (x1=actorInstantiation{
+} t = MAIN {$ret.setLine($t.getLine());} LBRACE (x1=actorInstantiation{
     $ret.addActorInstantiation($x1.ret);
 })* RBRACE;
 
 actorInstantiation returns[ActorInstantiation ret]:
 	x1=identifier x2=identifier{
         $ret = new ActorInstantiation(new ActorType($x1.ret), $x2.ret);
-	} LPAREN (
-		x3=identifier{
+	} t = LPAREN (
+		x3=identifier
+		{
+		    $ret.setLine($t.getLine());
 		    $ret.addKnownActor($x3.ret);
 		} (COMMA x4=identifier{
 		    $ret.addKnownActor($x4.ret);
@@ -78,8 +81,9 @@ actorInstantiation returns[ActorInstantiation ret]:
 	} RPAREN SEMICOLON;
 
 initHandlerDeclaration returns[InitHandlerDeclaration ret]:
-    MSGHANDLER x0=INITIAL{
+    t=MSGHANDLER x0=INITIAL{
         $ret = new InitHandlerDeclaration(new Identifier($x0.text));
+        $ret.setLine($t.getLine());
     } LPAREN x1=argDeclarations{
         $ret.setArgs($x1.ret);
 	} RPAREN LBRACE x2=varDeclarations{
@@ -91,8 +95,9 @@ initHandlerDeclaration returns[InitHandlerDeclaration ret]:
 	)* RBRACE;
 
 msgHandlerDeclaration returns[MsgHandlerDeclaration ret]:
-	MSGHANDLER x1=identifier{
+	t=MSGHANDLER x1=identifier{
 	    $ret = new MsgHandlerDeclaration($x1.ret);
+	    $ret.setLine($t.getLine());
 	} LPAREN x2=argDeclarations{
 	    $ret.setArgs($x2.ret);
 	} RPAREN LBRACE x3=varDeclarations{
@@ -123,17 +128,21 @@ varDeclarations returns[ArrayList<VarDeclaration> ret]:
 })*;
 
 varDeclaration returns[VarDeclaration ret]:
-	INT x1=identifier{
+	t1=INT x1=identifier{
 	    $ret = new VarDeclaration($x1.ret, new IntType());
+        $ret.setLine($t1.getLine());
 	}
-	| STRING x2=identifier{
+	| t2=STRING x2=identifier{
 	    $ret = new VarDeclaration($x2.ret, new StringType());
+        $ret.setLine($t2.getLine());
 	}
-	| BOOLEAN x3=identifier{
+	| t3=BOOLEAN x3=identifier{
 	    $ret = new VarDeclaration($x3.ret, new BooleanType());
+	    $ret.setLine($t3.getLine());
 	}
-	| INT x4=identifier LBRACKET y=INTVAL RBRACKET{
+	| t4=INT x4=identifier LBRACKET y=INTVAL RBRACKET{
    	    $ret = new VarDeclaration($x4.ret, new ArrayType($y.int));
+        $ret.setLine($t4.getLine());
 	};
 
 statement returns[Statement ret]:
@@ -160,33 +169,35 @@ statement returns[Statement ret]:
 	}
 	|   x8=msgHandlerCall{
         $ret = $x8.ret;
-	};
+};
 
 blockStmt returns[Block ret]: {
     $ret = new Block();
-} LBRACE (s=statement
+} t=LBRACE {$ret.setLine($t.getLine());} (s=statement
 {
     $ret.addStatement($s.ret);
 })* RBRACE;
 
-printStmt returns[Print ret]: PRINT LPAREN e=expression
+printStmt returns[Print ret]: t=PRINT LPAREN e=expression
 {
     $ret = new Print($e.ret);
+    $ret.setLine($t.getLine());
 }RPAREN SEMICOLON;
 
 assignStmt returns[Statement ret]: x1=assignment SEMICOLON{
     $ret = $x1.ret;
 };
 
-assignment returns[Assign ret]: x1=orExpression ASSIGN x2=expression{
+assignment returns[Assign ret]: x1=orExpression t=ASSIGN x2=expression{
     $ret = new Assign($x1.ret, $x2.ret);
+    $ret.setLine($t.getLine());
 };
 
 forStmt returns[For ret]:
     {
         $ret = new For();
     }
-	FOR LPAREN (x1=assignment{
+	t=FOR {$ret.setLine($t.getLine());} LPAREN (x1=assignment{
 	    $ret.setInitialize($x1.ret);
 	})? SEMICOLON (x2=expression{
 	    $ret.setCondition($x2.ret);
@@ -199,9 +210,10 @@ forStmt returns[For ret]:
 	};
 
 ifStmt returns[Conditional ret]:
-    IF LPAREN x1=expression RPAREN x2=statement x3=elseStmt
+    t=IF LPAREN x1=expression RPAREN x2=statement x3=elseStmt
     {
         $ret = new Conditional($x1.ret, $x2.ret);
+        $ret.setLine($t.getLine());
         if($x2.ret != null)
             $ret.setElseBody($x3.ret);
     }
@@ -213,41 +225,47 @@ elseStmt returns[Statement ret]: ELSE x1=statement{
     $ret = null;
 };
 
-continueStmt returns[Continue ret]: CONTINUE SEMICOLON{
+continueStmt returns[Continue ret]: t=CONTINUE SEMICOLON{
     $ret = new Continue();
+    $ret.setLine($t.getLine());
 };
 
-breakStmt returns[Break ret]: BREAK SEMICOLON{
+breakStmt returns[Break ret]: t=BREAK SEMICOLON{
     $ret = new Break();
+    $ret.setLine($t.getLine());
 };
 
 msgHandlerCall returns[MsgHandlerCall ret] locals[Expression ex]:
     (x1=identifier{$ex = $x1.ret;} | x4=SELF{$ex = new Self();} | x5=SENDER{$ex = new Sender();})
-     DOT x2=identifier LPAREN x3=expressionList RPAREN SEMICOLON
+     t=DOT x2=identifier LPAREN x3=expressionList RPAREN SEMICOLON
     {
         $ret = new MsgHandlerCall($ex, $x2.ret);
+        $ret.setLine($t.getLine());
         $ret.setArgs($x3.ret);
     };
 
 expression returns[Expression ret]:
     x1=orExpression{
         $ret = $x1.ret;
-    } (ASSIGN x2=expression{
+    } (t=ASSIGN x2=expression{
         $ret = new BinaryExpression($ret, $x2.ret, BinaryOperator.assign);
+        $ret.setLine($t.getLine());
     })?;
 
 orExpression returns [Expression ret]:
     x1=andExpression{
         $ret = $x1.ret;
-    } (OR x2=andExpression{
+    } (t=OR x2=andExpression{
         $ret = new BinaryExpression($ret, $x2.ret, BinaryOperator.or);
+        $ret.setLine($t.getLine());
     })*;
 
 andExpression returns [Expression ret]:
     x1=equalityExpression{
         $ret = $x1.ret;
-    } (AND x2=equalityExpression{
+    } (t=AND x2=equalityExpression{
         $ret = new BinaryExpression($ret, $x2.ret, BinaryOperator.and);
+        $ret.setLine($t.getLine());
     })*;
 
 equalityExpression returns [Expression ret] locals[BinaryOperator op]:
@@ -255,6 +273,10 @@ equalityExpression returns [Expression ret] locals[BinaryOperator op]:
         $ret = $x1.ret;
 	} ((op1=EQ{$op = BinaryOperator.eq;} | op2=NEQ{$op = BinaryOperator.neq;}) x2=relationalExpression{
         $ret = new BinaryExpression($ret, $x2.ret, $op);
+        if($op1 != null)
+            $ret.setLine($op1.getLine());
+        else if($op2 != null)
+            $ret.setLine($op2.getLine());
 	})*;
 
 relationalExpression returns [Expression ret] locals[BinaryOperator op]:
@@ -262,6 +284,10 @@ relationalExpression returns [Expression ret] locals[BinaryOperator op]:
         $ret = $x1.ret;
     } ((op1=LT{$op = BinaryOperator.lt;} | op2=GT{$op = BinaryOperator.gt;}) x2=additiveExpression{
         $ret = new BinaryExpression($ret, $x2.ret, $op);
+        if($op1 != null)
+            $ret.setLine($op1.getLine());
+        else if($op2 != null)
+            $ret.setLine($op2.getLine());
     })*;
 
 additiveExpression returns [Expression ret] locals[BinaryOperator op]:
@@ -270,29 +296,43 @@ additiveExpression returns [Expression ret] locals[BinaryOperator op]:
 	} (
 		(op1=PLUS{$op = BinaryOperator.add;} | op2=MINUS{$op = BinaryOperator.sub;}) x2=multiplicativeExpression{
             $ret = new BinaryExpression($ret, $x2.ret, $op);
+            if($op1!= null)
+                $ret.setLine($op1.getLine());
+            else if($op2 != null)
+                $ret.setLine($op2.getLine());
 		}
 	)*;
 
 multiplicativeExpression returns [Expression ret] locals[BinaryOperator op]:
 	x1=preUnaryExpression{
 	    $ret = $x1.ret;
-	} ((op1=MULT{$op = BinaryOperator.mult;} | op2=DIV{$op = BinaryOperator.div;} | op3=PERCENT{
-	    $op = BinaryOperator.mod;}) x2=preUnaryExpression{
+	} ((op1=MULT{$op = BinaryOperator.mult;} | op2=DIV{$op = BinaryOperator.div;} | op3=PERCENT{$op = BinaryOperator.mod;})
+	x2=preUnaryExpression{
         $ret = new BinaryExpression($ret, $x2.ret, $op);
+        if($op1 != null)
+            $ret.setLine($op1.getLine());
+        else if($op2 != null)
+            $ret.setLine($op2.getLine());
+	    else if($op3 != null)
+	        $ret.setLine($op3.getLine());
 	})*;
 
 preUnaryExpression returns[Expression ret]:
-	NOT exp1 = preUnaryExpression{
+	t=NOT exp1 = preUnaryExpression{
         $ret = new UnaryExpression(UnaryOperator.not, $exp1.ret);
+	    $ret.setLine($t.getLine());
 	}
-	| MINUS exp2 = preUnaryExpression{
+	| t=MINUS exp2 = preUnaryExpression{
         $ret = new UnaryExpression(UnaryOperator.minus, $exp2.ret);
+	    $ret.setLine($t.getLine());
 	}
-	| PLUSPLUS exp3 = preUnaryExpression{
+	| t=PLUSPLUS exp3 = preUnaryExpression{
         $ret = new UnaryExpression(UnaryOperator.preinc, $exp3.ret);
+	    $ret.setLine($t.getLine());
 	}
-	| MINUSMINUS exp4 = preUnaryExpression{
+	| t=MINUSMINUS exp4 = preUnaryExpression{
         $ret = new UnaryExpression(UnaryOperator.predec, $exp4.ret);
+	    $ret.setLine($t.getLine());
 	}
 	| exp5 = postUnaryExpression{
         $ret = $exp5.ret;
@@ -302,7 +342,7 @@ postUnaryExpression
     returns[Expression ret]:
     exp =otherExpression{
         $ret = $exp.ret;
-    } ( op =postUnaryOp {
+    } ( op = postUnaryOp {
         $ret = new UnaryExpression($op.ret, $exp.ret);
     })?;
 
@@ -333,27 +373,30 @@ otherExpression
 	}
 	| sender = SENDER {
 		$ret = new Sender();
+		$ret.setLine($sender.getLine());
 	};
 
-arrayCall returns[ArrayCall ret]: (x1=identifier | x2=actorVarAccess) LBRACKET x3=expression RBRACKET{
+arrayCall returns[ArrayCall ret]: (x1=identifier | x2=actorVarAccess) t=LBRACKET x3=expression RBRACKET{
     if($x1.ret != null)
         $ret = new ArrayCall($x1.ret, $x3.ret);
     else
         $ret = new ArrayCall($x2.ret, $x3.ret);
+    $ret.setLine($t.getLine());
 };
 
 actorVarAccess
 	returns[Expression ret]:
-	SELF DOT idf = identifier {
+	t=SELF DOT idf = identifier {
 		$ret = new ActorVarAccess($idf.ret);
+        $ret.setLine($t.getLine());
     };
 
 expressionList returns[ArrayList<Expression> ret]:
-    {
-        $ret = new ArrayList<Expression>();
-    }
+{
+    $ret = new ArrayList<Expression>();
+}
     (
-        x1=expression{ $ret.add($x1.ret);}
+        x1=expression{$ret.add($x1.ret);}
         (
             COMMA x2=expression
             {
@@ -366,21 +409,26 @@ identifier
 	returns[Identifier ret]:
 	IDENTIFIER {
         $ret = new Identifier($IDENTIFIER.text);
+        $ret.setLine($IDENTIFIER.getLine());
     };
 
 value
 	returns[Value ret]:
 	INTVAL {
         $ret = new IntValue($INTVAL.int, new IntType());
+        $ret.setLine($INTVAL.getLine());
     }
 	| STRINGVAL {
         $ret = new StringValue($STRINGVAL.text, new StringType());
+        $ret.setLine($STRINGVAL.getLine());
     }
-	| TRUE {
+	| t1=TRUE {
         $ret = new BooleanValue(true, new BooleanType());
+        $ret.setLine($t1.getLine());
     }
-	| FALSE {
+	| t2=FALSE {
         $ret = new BooleanValue(false, new BooleanType());
+        $ret.setLine($t2.getLine());
     };
 
 // values

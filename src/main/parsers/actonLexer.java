@@ -1,4 +1,4 @@
-// Generated from /home/mojtaba/IdeaProjects/Acton/src/acton.g4 by ANTLR 4.7.2
+// Generated from D:/Programming/Compiler/2/Acton/src\acton.g4 by ANTLR 4.7.2
 package main.parsers;
 
     import main.*;
